@@ -46,6 +46,5 @@ test("Sign up with a new user, add a new contact and validate it on contact deta
 
     let cellsText = await cells.evaluateAll((list) => list.map((element) => element.textContent.trim()));
     cellsText.shift();
-    logger.info("Cells: " + cellsText);
     expect(cellsText).toEqual([`${username} ${userLastName}`, userBirthday, userEmail, "", userAddress, `${userCity} ${userState} ${userPostalCode}`, userCountry]);
 });

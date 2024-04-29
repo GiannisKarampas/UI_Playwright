@@ -7,7 +7,6 @@ const logger = Logger.loggerSetup();
 test("Add a contact with invalid date of birth and validate the error message.", async ({page}) => {
     const login = new LoginPage(page);
     const email = page.locator("#email");
-    const password = page.locator("#password");
     const submitButton = page.locator("#submit");
     const firstName = page.locator("#firstName");
     const lastName = page.locator("#lastName");
