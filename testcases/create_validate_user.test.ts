@@ -4,40 +4,30 @@ import {Logger} from "../utils/common/logger.utils";
 import {createRandomUser} from "../utils/interfaces/userObject";
 
 const logger = Logger.loggerSetup();
-const user = createRandomUser();
-const username = user.firstName;
-const userLastName = user.lastName.toLowerCase();
-const userBirthday = "1995-06-04";
-const userEmail = user.email.toLowerCase();
-const userPassword = "123456789";
-const userAddress = user.address.toLowerCase();
-const userCity = "Thessaloniki";
-const userState = "Central Macedonia";
-const userPostalCode = "56429";
-const userCountry = "Greece";
+const randomUser = createRandomUser();
 
-test("Sign up with a new user, add a new contact and validate it on contact details page", async ({page, newContact}) => {
-    const signupButton = page.locator("#signup");
-    const firstName = page.locator("#firstName");
-    const lastName = page.locator("#lastName");
-    const email = page.locator("#email");
-    const password = page.locator("#password");
-    const submitButton = page.locator("#submit");
+const user = {
+    username: randomUser.firstName,
+    userLastName: randomUser.lastName.toLowerCase(),
+    userBirthday: "1995-06-04",
+    userEmail: randomUser.email.toLowerCase(),
+    userPassword: "123456789",
+    userAddress: randomUser.address.toLowerCase(),
+    userCity: "Thessaloniki",
+    userState: "Central Macedonia",
+    userPostalCode: "56429",
+    userCountry: "Greece",
+};
 
+test("Sign up with a new user, add a new contact and validate it on contact details page", async ({page, newUser, newContact}) => {
     const headers = page.locator(".contactTableHead tr th");
     const cells = page.locator(".contactTableBodyRow td");
 
     // Create a new user
-    await page.goto(process.env.URL);
-    await signupButton.click();
-    await firstName.fill(username);
-    await lastName.fill(userLastName);
-    await email.fill(userEmail);
-    await password.fill(userPassword);
-    await submitButton.click();
+    await newUser.createUser(user);
 
     // Add new contact
-    await newContact.createNewContact(username, userLastName, userBirthday, userEmail, userAddress, userCity, userState, userPostalCode, userCountry);
+    await newContact.createNewContact(user);
 
     // Validate the contact on details page
     await expect(headers).toHaveCount(7);
@@ -46,5 +36,5 @@ test("Sign up with a new user, add a new contact and validate it on contact deta
 
     let cellsText = await cells.evaluateAll((list) => list.map((element) => element.textContent.trim()));
     cellsText.shift();
-    expect(cellsText).toEqual([`${username} ${userLastName}`, userBirthday, userEmail, "", userAddress, `${userCity} ${userState} ${userPostalCode}`, userCountry]);
+    expect.soft(cellsText).toEqual([`${user.username} ${user.userLastName}`, user.userBirthday, user.userEmail, "", user.userAddress, `${user.userCity} ${user.userState} ${user.userPostalCode}`, user.userCountry]);
 });

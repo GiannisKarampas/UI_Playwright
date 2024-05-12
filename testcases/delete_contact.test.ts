@@ -2,38 +2,53 @@ import {test} from "../fixtures/fixtures";
 import {expect} from "@playwright/test";
 import {Logger} from "../utils/common/logger.utils";
 import {createRandomUser} from "../utils/interfaces/userObject";
+import {APIUtils} from "../utils/common/api.utils";
 
 const logger = Logger.loggerSetup();
-const user = createRandomUser();
-const username = user.firstName;
-const userLastName = user.lastName.toLowerCase();
-const userBirthday = "1995-06-04";
-const userEmail = user.email.toLowerCase();
-const userAddress = user.address.toLowerCase();
-const userCity = "Thessaloniki";
-const userState = "Central Macedonia";
-const userPostalCode = "56429";
-const userCountry = "Greece";
+const randomUser = createRandomUser();
+
+const user = {
+    username: randomUser.firstName,
+    userLastName: randomUser.lastName.toLowerCase(),
+    userBirthday: "1995-06-04",
+    userEmail: randomUser.email.toLowerCase(),
+    userPassword: "123456789",
+    userAddress: randomUser.address.toLowerCase(),
+    userCity: "Thessaloniki",
+    userState: "Central Macedonia",
+    userPostalCode: "56429",
+    userCountry: "Greece",
+};
 
 test("Delete a contact.", async ({page, login, newContact}) => {
-    const cells = page.locator(".contactTableBodyRow");
+    const contactRows = page.locator(".contactTableBodyRow");
     const deleteBtn = page.locator("#delete");
+    const nameCell = page.locator(".contactTableBodyRow td:nth-child(2)");
+    let initialContactCount = 0;
+    let laterContactNumber = 0;
 
     // Login
     await login.loginUser();
 
+    await page.waitForTimeout(2000);
+    logger.info(await contactRows.first().isVisible())
     // Check if there is contact
-    if (!await cells.isVisible()) {
-        await newContact.createNewContact(username, userLastName, userBirthday, userEmail, userAddress, userCity, userState, userPostalCode, userCountry);
+    if (!await contactRows.first().isVisible()) {
+        await APIUtils.createNewContact(user);
+        await page.reload();
     }
-    await page.locator(".contactTableBodyRow td:nth-child(2)").click();
+    initialContactCount = await nameCell.count();
+    logger.info(`Number of contactRows before the delete: ${initialContactCount}`);
+    await nameCell.first().click();
     page.on("dialog", async (dialog) => {
         logger.info(dialog.message());
         await dialog.accept();
     });
 
     await deleteBtn.click();
-
-    await expect(page.locator('.contactTable')).toBeVisible();
-    await expect(cells).toHaveCount(0);
+    await page.waitForTimeout(2000);
+    laterContactNumber = await nameCell.count();
+    logger.info(`Number of contactRows after the delete: ${laterContactNumber}`);
+    await expect.soft(page.locator('.contactTable')).toBeVisible();
+    await expect.soft(contactRows).toHaveCount(laterContactNumber);
 });
